@@ -15,7 +15,7 @@ public:
 
 public slots:
     QString const& getName() const;
-    int getPriority() const;
+    QString getPriority() const;
     QString const& getDescription() const;
     QDate const& getTerm() const;
     QVector<Task*> const& getChildren() const;
@@ -24,10 +24,11 @@ public slots:
     int getChildIndex(Task* child) const;
 
     void setName(QString const& name);
-    void setPriority(int priority);
+    void setPriority(QString priority);
     void setDescription(QString const& description);
     void setTerm(QDate const& term);
     void addChild(Task* child);
+    void addChildAt(int row, Task* child);
     void removeChild(Task* child);
     void setProgress(float progress);
 
@@ -38,7 +39,7 @@ private:
 
 private:
     QString m_name;
-    int m_priority;
+    QString m_priority;
     QString m_description;
     QDate m_term;
     float m_progress;

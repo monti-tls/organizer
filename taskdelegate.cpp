@@ -1,38 +1,59 @@
 #include "taskdelegate.h"
+#include "task.h"
+#include "settingsmanager.h"
 #include <QApplication>
 #include <QComboBox>
 #include <QDateEdit>
+#include <QPainter>
+#include <QGraphicsOpacityEffect>
 
 TaskDelegate::TaskDelegate(QObject *parent) :
     QStyledItemDelegate(parent)
 {
+
 }
 
 #include <QDebug>
 
 void TaskDelegate::paint(QPainter* painter, QStyleOptionViewItem const& option, QModelIndex const& index) const
 {
-    // Progress
-    if (index.column() == 3)
+    painter->save();
+
+    QStyleOptionViewItem new_option = option;
+    initStyleOption(&new_option, index);
+
+    // Name
+    if (index.column() == 0)
     {
-        int progress = index.data().toFloat() * 100;
+        QString priority = ((Task*) index.internalPointer())->getPriority();
+        QColor color = SettingsManager::instance()->getColorForPriority(priority);
+        new_option.palette.setColor(QPalette::Text, color);
+        new_option.palette.setColor(QPalette::HighlightedText, Qt::white);
 
-        QStyleOptionProgressBar progressBarOption;
-        progressBarOption.rect = option.rect;
-        progressBarOption.minimum = 0;
-        progressBarOption.maximum = 100;
-        progressBarOption.progress = progress;
-        progressBarOption.text = QString::number(progress) + "%";
-        progressBarOption.textVisible = true;
-
-        QApplication::style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
+        QStyledItemDelegate::paint(painter, new_option, index);
     }
     // Term
     else if (index.column() == 2)
     {
         QDate date = index.data().toDate();
-        QString text = date.toString("d MMM yy");
-        QApplication::style()->drawItemText(painter, option.rect, Qt::AlignCenter, option.palette, true, text);
+        QString text = date.toString(SettingsManager::instance()->getDateFormat());
+        QApplication::style()->drawItemText(painter, option.rect, Qt::AlignCenter, new_option.palette, true, text);
+    }
+    // Progress
+    else if (index.column() == 3)
+    {
+        int progress = index.data().toFloat() * 100;
+
+        QStyleOptionProgressBar progressBarOption;
+        progressBarOption.rect = new_option.rect;
+        progressBarOption.minimum = 0;
+        progressBarOption.maximum = 100;
+        progressBarOption.progress = progress;
+        progressBarOption.text = QString::number(progress) + "%";
+        progressBarOption.textVisible = true;
+        progressBarOption.palette = new_option.palette;
+
+        QApplication::style()->drawControl(QStyle::CE_ProgressBar, &progressBarOption, painter);
     }
     // Description
     else if (index.column() == 4)
@@ -45,35 +66,28 @@ void TaskDelegate::paint(QPainter* painter, QStyleOptionViewItem const& option, 
             text += "...";
         }
 
-        QApplication::style()->drawItemText(painter, option.rect, Qt::AlignLeft, option.palette, true, text);
+        QApplication::style()->drawItemText(painter, option.rect, Qt::AlignLeft, new_option.palette, true, text);
     }
     else
-    {
-        QStyledItemDelegate::paint(painter, option, index);
-    }
+        QStyledItemDelegate::paint(painter, new_option, index);
+
+    painter->restore();
 }
 
 QSize TaskDelegate::sizeHint(QStyleOptionViewItem const& option, QModelIndex const& index) const
 {
-    // Progress
-    if (index.column() == 3)
+    QSize hint;
+    QWidget* editor = createEditor(0, option, index);
+    if (editor)
     {
-        return option.rect.size();
-    }
-    // Term
-    else if (index.column() == 2)
-    {
-        return option.rect.size();
-    }
-    // Description
-    else if (index.column() == 4)
-    {
-        return option.rect.size();
+        setEditorData(editor, index);
+        hint = editor->sizeHint();
+        delete editor;
     }
     else
-    {
-        return QStyledItemDelegate::sizeHint(option, index);
-    }
+        hint = QStyledItemDelegate::sizeHint(option, index);
+
+    return hint;
 }
 
 QWidget* TaskDelegate::createEditor(QWidget* parent, QStyleOptionViewItem const&, QModelIndex const& index) const
@@ -83,11 +97,8 @@ QWidget* TaskDelegate::createEditor(QWidget* parent, QStyleOptionViewItem const&
     {
         QComboBox* editor = new QComboBox(parent);
         editor->setFrame(false);
-        editor->addItem("1");
-        editor->addItem("2");
-        editor->addItem("3");
-        editor->addItem("5");
-        editor->addItem("8");
+        foreach (QString val, SettingsManager::instance()->getAllowablePriorities())
+            editor->addItem(val);
 
         return editor;
     }
@@ -97,7 +108,7 @@ QWidget* TaskDelegate::createEditor(QWidget* parent, QStyleOptionViewItem const&
         QDateEdit* editor = new QDateEdit(parent);
         editor->setFrame(false);
         editor->setMinimumDate(QDate::currentDate());
-        editor->setDisplayFormat("d MMM yy");
+        editor->setDisplayFormat(SettingsManager::instance()->getDateFormat());
         editor->setCalendarPopup(true);
 
         return editor;
@@ -111,10 +122,10 @@ void TaskDelegate::setEditorData(QWidget* editor, QModelIndex const& index) cons
     // Priority
     if (index.column() == 1)
     {
-        int value = index.model()->data(index, Qt::EditRole).toInt();
+        QString value = index.model()->data(index, Qt::EditRole).toString();
 
         QComboBox* combo = (QComboBox*) editor;
-        combo->setCurrentIndex(combo->findText(QString::number(value)));
+        combo->setCurrentIndex(combo->findText(value));
     }
     // Term
     else if (index.column() == 2)
@@ -132,7 +143,7 @@ void TaskDelegate::setModelData(QWidget* editor, QAbstractItemModel* model, QMod
     if (index.column() == 1)
     {
         QComboBox* combo = (QComboBox*) editor;
-        model->setData(index, combo->currentText().toInt(), Qt::EditRole);
+        model->setData(index, combo->currentText(), Qt::EditRole);
     }
     // Term
     else if (index.column() == 2)

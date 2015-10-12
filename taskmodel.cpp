@@ -6,6 +6,7 @@ TaskModel::TaskModel(Task* root, QObject *parent) :
     QAbstractItemModel(parent),
     m_root(root)
 {
+    setSupportedDragActions(Qt::MoveAction);
 }
 
 TaskModel::~TaskModel()
@@ -38,21 +39,6 @@ QVariant TaskModel::data(QModelIndex const& index, int role) const
     }
     else if (role == Qt::ToolTipRole)
         return task->getDescription();
-    else if (role == Qt::DecorationRole && index.column() == 0)
-    {
-        if (task->getPriority() == 1)
-            return QColor(Qt::darkBlue);
-        else if (task->getPriority() == 2)
-            return QColor(Qt::blue);
-        else if (task->getPriority() == 3)
-            return QColor(Qt::green);
-        else if (task->getPriority() == 5)
-            return QColor(Qt::yellow);
-        else if (task->getPriority() == 8)
-            return QColor(Qt::red);
-        else if (task->getPriority() > 8)
-            return QColor(Qt::magenta);
-    }
 
     return QVariant();
 }
@@ -64,12 +50,14 @@ bool TaskModel::setData(QModelIndex const& index, QVariant const& value, int rol
 
     Task* task = (Task*) index.internalPointer();
 
-    if (role == Qt::EditRole)
+    // DisplayRole for Drag & Drop
+    if (role == Qt::EditRole ||
+        role == Qt::DisplayRole)
     {
         if (index.column() == 0)
             task->setName(value.toString());
         else if (index.column() == 1)
-            task->setPriority(value.toInt());
+            task->setPriority(value.toString());
         else if (index.column() == 2)
             task->setTerm(value.toDate());
         else if (index.column() == 3)
@@ -87,15 +75,20 @@ bool TaskModel::setData(QModelIndex const& index, QVariant const& value, int rol
 
 Qt::ItemFlags TaskModel::flags(QModelIndex const& index) const
 {
-    if (!index.isValid())
-        return 0;
+    Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsDragEnabled;
 
-    Qt::ItemFlags flags = Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    bool dropEnabled = true; //!index.isValid();
 
-    // Priority or Term
-    if (index.column() == 1 ||
-        index.column() == 2)
-         flags |= Qt::ItemIsEditable;
+    if (index.isValid())
+    {
+        // Priority or Term
+        if (index.column() == 1 ||
+            index.column() == 2)
+             flags |= Qt::ItemIsEditable;
+    }
+
+    if (dropEnabled)
+        flags |= Qt::ItemIsDropEnabled;
 
     return flags;
 }
@@ -153,11 +146,16 @@ QModelIndex TaskModel::parent(QModelIndex const& index) const
     return createIndex(id, 0, parent);
 }
 
+bool TaskModel::hasChildren(QModelIndex const& index) const
+{
+    if (!index.isValid())
+        return true;
+
+    return ((Task*) index.internalPointer())->getChildren().size();
+}
+
 int TaskModel::rowCount(QModelIndex const& parent) const
 {
-    if (parent.column() > 0)
-        return 0;
-
     Task* root;
 
     if (!parent.isValid())
@@ -174,9 +172,13 @@ int TaskModel::columnCount(QModelIndex const&) const
     return 5;
 }
 
+#include <QDebug>
+
 bool TaskModel::removeRows(int row, int count, QModelIndex const& parent)
 {
     Task* root;
+
+    qDebug() << "removeRows(" << row << ", " << count << ", " << parent << ")";
 
     if (!parent.isValid())
         root = m_root;
@@ -186,27 +188,40 @@ bool TaskModel::removeRows(int row, int count, QModelIndex const& parent)
     if (row + count > root->getChildren().size())
         return false;
 
+    beginRemoveRows(parent, row, row + count - 1);
     for (int id = 0; id < count; ++id)
         root->removeChild(root->getChildren().at(row + id));
+    endInsertRows();
+
     emit layoutChanged();
 
     return true;
 }
 
-bool TaskModel::insertRows(int, int count, QModelIndex const& parent)
+bool TaskModel::insertRows(int row, int count, QModelIndex const& parent)
 {
     Task* root;
+
+    qDebug() << "insertRows(" << row << ", " << count << ", " << parent << ")";
 
     if (!parent.isValid())
         root = m_root;
     else
         root = (Task*) parent.internalPointer();
 
+    beginInsertRows(parent, row, row + count - 1);
     for (int id = 0; id < count; ++id)
-        root->addChild(new Task());
+        root->addChildAt(row + id, new Task());
+    endInsertRows();
+
     emit layoutChanged();
 
     return true;
+}
+
+Qt::DropActions TaskModel::supportedDropActions() const
+{
+    return Qt::MoveAction;
 }
 
 Task* TaskModel::root() const

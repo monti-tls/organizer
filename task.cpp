@@ -1,10 +1,11 @@
 #include "task.h"
+#include "settingsmanager.h"
 #include <QDataStream>
 
 Task::Task(QObject* parent) :
     QObject(parent),
     m_name(""),
-    m_priority(1),
+    m_priority(SettingsManager::instance()->getAllowablePriorities().first()),
     m_description("No description available"),
     m_term(QDate()),
     m_progress(0.0f),
@@ -23,7 +24,7 @@ QString const& Task::getName() const
     return m_name;
 }
 
-int Task::getPriority() const
+QString Task::getPriority() const
 {
     return m_priority;
 }
@@ -68,7 +69,7 @@ void Task::setName(QString const& name)
     update();
 }
 
-void Task::setPriority(int priority)
+void Task::setPriority(QString priority)
 {
     m_priority = priority;
     update();
@@ -90,6 +91,13 @@ void Task::addChild(Task* child)
 {
     child->m_super = this;
     m_children.push_back(child);
+    update();
+}
+
+void Task::addChildAt(int row, Task* child)
+{
+    child->m_super = this;
+    m_children.insert(row, child);
     update();
 }
 
@@ -153,7 +161,7 @@ QDataStream& operator<<(QDataStream& out, Task* task)
 QDataStream& operator>>(QDataStream& in, Task* task)
 {
     QString name, description;
-    int priority;
+    QString priority;
     QDate term;
     float progress;
     int children;

@@ -1,5 +1,6 @@
 #include "taskwizard.h"
 #include "ui_taskwizard.h"
+#include "settingsmanager.h"
 
 TaskWizard::TaskWizard(Task* task, QWidget* parent) :
     QDialog(parent),
@@ -7,13 +8,17 @@ TaskWizard::TaskWizard(Task* task, QWidget* parent) :
 {
     m_ui->setupUi(this);
 
+    m_ui->priority->clear();
+    foreach (QString val, SettingsManager::instance()->getAllowablePriorities())
+        m_ui->priority->addItem(val);
+
     m_ui->term->setMinimumDate(QDate::currentDate());
     QObject::connect(m_ui->hasTerm, SIGNAL(clicked(bool)), m_ui->term, SLOT(setEnabled(bool)));
 
     if (task)
     {
         m_ui->name->setText(task->getName());
-        m_ui->priority->setCurrentIndex(m_ui->priority->findText(QString::number(task->getPriority())));
+        m_ui->priority->setCurrentIndex(m_ui->priority->findText(task->getPriority()));
         if (task->getTerm().isValid())
         {
             m_ui->hasTerm->setChecked(true);
@@ -49,9 +54,9 @@ QString TaskWizard::getName() const
     return m_ui->name->text();
 }
 
-int TaskWizard::getPriority() const
+QString TaskWizard::getPriority() const
 {
-    return m_ui->priority->currentText().toInt();
+    return m_ui->priority->currentText();
 }
 
 QDate TaskWizard::getTerm() const

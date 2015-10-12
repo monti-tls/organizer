@@ -19,10 +19,12 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, QModelIndex const& parent) const;
     QModelIndex parent(QModelIndex const& child) const;
+    bool hasChildren(QModelIndex const& index) const;
     int rowCount(QModelIndex const& parent) const;
     int columnCount(QModelIndex const& parent) const;
     bool removeRows(int row, int count, QModelIndex const& parent);
     bool insertRows(int row, int count, QModelIndex const& parent);
+    Qt::DropActions supportedDropActions() const;
 
     Task* root() const;
 

@@ -11,6 +11,10 @@ TaskView::TaskView(QWidget* parent) :
 {
     setContextMenuPolicy(Qt::CustomContextMenu);
     QObject::connect(this, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(M_onContextMenuRequested(QPoint)));
+
+    setDragEnabled(true);
+    setDragDropMode(QTreeView::InternalMove);
+    setDragDropOverwriteMode(false);
 }
 
 void TaskView::M_onContextMenuRequested(QPoint const& at)
@@ -99,14 +103,18 @@ void TaskView::M_addItem()
     if (wizard->exec() == QDialog::Accepted)
     {
         QModelIndex index;
+        int row;
         if (m_currentIndex.isValid())
+        {
             index = m_currentIndex;
+        }
         else
+        {
             index = QModelIndex();
+        }
 
-        // Row is ignored as the item is appended
-        model()->insertRow(0, index);
-        int row = model()->rowCount(index) - 1;
+        row = model()->rowCount(index);
+        model()->insertRow(row, index);
 
         model()->setData(model()->index(row, 0, index), wizard->getName());
         model()->setData(model()->index(row, 1, index), wizard->getPriority());

@@ -18,14 +18,22 @@ SOURCES += main.cpp\
     taskmodel.cpp \
     taskdelegate.cpp \
     taskview.cpp \
-    taskwizard.cpp
+    taskwizard.cpp \
+    settingsmanager.cpp \
+    settingswizard.cpp \
+    prioritywizard.cpp
 
 HEADERS  += mainwindow.h \
     task.h \
     taskmodel.h \
     taskdelegate.h \
     taskview.h \
-    taskwizard.h
+    taskwizard.h \
+    settingsmanager.h \
+    settingswizard.h \
+    prioritywizard.h
 
 FORMS    += mainwindow.ui \
-    taskwizard.ui
+    taskwizard.ui \
+    settingswizard.ui \
+    prioritywizard.ui

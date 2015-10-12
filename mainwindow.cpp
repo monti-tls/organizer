@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "settingswizard.h"
+#include "settingsmanager.h"
 #include <QDataStream>
 #include <QFile>
 #include <QMessageBox>
@@ -13,13 +15,14 @@ MainWindow::MainWindow(QWidget *parent) :
     m_ui->setupUi(this);
 
     QObject::connect(m_ui->about, SIGNAL(triggered()), this, SLOT(M_showAbout()));
+    QObject::connect(m_ui->settings, SIGNAL(triggered()), this, SLOT(M_editSettings()));
 
-    M_openTasksFile("/home/alex/Desktop/sample.todo");
+    M_openTasksFile(SettingsManager::instance()->getTasksFile());
 }
 
 MainWindow::~MainWindow()
 {
-    M_saveTasksFile("/home/alex/Desktop/sample.todo");
+    // M_saveTasksFile(SettingsManager::instance()->getTasksFile());
 
     delete m_ui;
 }
@@ -72,5 +75,12 @@ void MainWindow::M_showAbout()
 
 void MainWindow::M_editSettings()
 {
+    SettingsWizard* wizard = new SettingsWizard();
 
+    if (wizard->exec() == QDialog::Accepted)
+    {
+        wizard->writeSettings();
+    }
+
+    delete wizard;
 }

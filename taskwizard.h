@@ -18,7 +18,7 @@ public:
     ~TaskWizard();
 
     QString getName() const;
-    int getPriority() const;
+    QString getPriority() const;
     QDate getTerm() const;
     QString getDescription() const;
     float getProgress() const;
