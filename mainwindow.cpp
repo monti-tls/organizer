@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    // M_saveTasksFile(SettingsManager::instance()->getTasksFile());
+    M_saveTasksFile(SettingsManager::instance()->getTasksFile());
 
     delete m_ui;
 }

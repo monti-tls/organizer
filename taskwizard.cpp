@@ -7,6 +7,7 @@ TaskWizard::TaskWizard(Task* task, QWidget* parent) :
     m_ui(new Ui::TaskWizard)
 {
     m_ui->setupUi(this);
+    m_ui->name->setFocus();
 
     m_ui->priority->clear();
     foreach (QString val, SettingsManager::instance()->getAllowablePriorities())

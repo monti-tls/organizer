@@ -1,8 +1,10 @@
 #include "taskmodel.h"
 #include <QStringList>
 #include <QColor>
+#include <QMimeData>
+#include <QDataStream>
 
-TaskModel::TaskModel(Task* root, QObject *parent) :
+TaskModel::TaskModel(Task* root, QObject* parent) :
     QAbstractItemModel(parent),
     m_root(root)
 {
@@ -172,13 +174,9 @@ int TaskModel::columnCount(QModelIndex const&) const
     return 5;
 }
 
-#include <QDebug>
-
 bool TaskModel::removeRows(int row, int count, QModelIndex const& parent)
 {
     Task* root;
-
-    qDebug() << "removeRows(" << row << ", " << count << ", " << parent << ")";
 
     if (!parent.isValid())
         root = m_root;
@@ -191,7 +189,7 @@ bool TaskModel::removeRows(int row, int count, QModelIndex const& parent)
     beginRemoveRows(parent, row, row + count - 1);
     for (int id = 0; id < count; ++id)
         root->removeChild(root->getChildren().at(row + id));
-    endInsertRows();
+    endRemoveRows();
 
     emit layoutChanged();
 
@@ -201,8 +199,6 @@ bool TaskModel::removeRows(int row, int count, QModelIndex const& parent)
 bool TaskModel::insertRows(int row, int count, QModelIndex const& parent)
 {
     Task* root;
-
-    qDebug() << "insertRows(" << row << ", " << count << ", " << parent << ")";
 
     if (!parent.isValid())
         root = m_root;
@@ -222,6 +218,77 @@ bool TaskModel::insertRows(int row, int count, QModelIndex const& parent)
 Qt::DropActions TaskModel::supportedDropActions() const
 {
     return Qt::MoveAction;
+}
+
+QStringList TaskModel::mimeTypes() const
+{
+  return QStringList() << "application/x-qabstractitemmodeldatalist";
+}
+
+QMimeData* TaskModel::mimeData(QModelIndexList const& indexList) const
+{
+    QMimeData* mime = new QMimeData();
+
+    QByteArray array;
+    QDataStream stream(&array, QIODevice::WriteOnly);
+
+    // Count the number of row-unique indexes in list
+    int count = 0;
+    foreach (QModelIndex const& index, indexList)
+        if (index.isValid() && index.column() == 0)
+          ++count;
+
+    stream << count;
+
+    foreach (QModelIndex const& index, indexList)
+    {
+        if (!index.isValid())
+            return 0;
+
+        // Ignore columns, we store the whole node in a single MIME element
+        if (index.column() != 0)
+            continue;
+
+        stream << (Task*) index.internalPointer();
+    }
+
+    mime->setData("application/x-qabstractitemmodeldatalist", array);
+    return mime;
+}
+
+bool TaskModel::dropMimeData(QMimeData const* data, Qt::DropAction, int row, int, QModelIndex const& parent)
+{
+    if (!data)
+        return false;
+
+    if (row < 0)
+        row = rowCount(parent);
+
+    QByteArray array = data->data("application/x-qabstractitemmodeldatalist");
+    QDataStream stream(&array, QIODevice::ReadOnly);
+    int count;
+    stream >> count;
+    QVector<Task*> tasks;
+    for (int i = 0; i < count; ++i)
+    {
+        tasks.push_back(new Task());
+        stream >> tasks[i];
+    }
+
+    Task* root;
+    if (!parent.isValid())
+        root = m_root;
+    else
+        root = (Task*) parent.internalPointer();
+
+    beginInsertRows(parent, row, row + count - 1);
+    for (int id = row; id < row + count; ++id)
+        root->addChildAt(id, tasks[count - id + row - 1]);
+    endInsertRows();
+
+    emit layoutChanged();
+
+    return true;
 }
 
 Task* TaskModel::root() const

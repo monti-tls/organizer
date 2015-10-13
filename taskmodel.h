@@ -25,6 +25,9 @@ public:
     bool removeRows(int row, int count, QModelIndex const& parent);
     bool insertRows(int row, int count, QModelIndex const& parent);
     Qt::DropActions supportedDropActions() const;
+    QStringList mimeTypes() const;
+    QMimeData* mimeData(QModelIndexList const& indexList) const;
+    bool dropMimeData(QMimeData const* data, Qt::DropAction, int row, int, QModelIndex const& parent);
 
     Task* root() const;
 
