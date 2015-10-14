@@ -28,6 +28,7 @@ void SettingsWizard::readSettings()
 {
     m_ui->dateFormat->setText(SettingsManager::instance()->getDateFormat());
     m_ui->tasksFile->setText(SettingsManager::instance()->getTasksFile());
+    m_ui->daysLeft->setValue(SettingsManager::instance()->getDateAlarmDays());
 
     QVector<QString> priorities = SettingsManager::instance()->getAllowablePriorities();
 
@@ -45,6 +46,7 @@ void SettingsWizard::writeSettings() const
 {
     SettingsManager::instance()->setDateFormat(m_ui->dateFormat->text());
     SettingsManager::instance()->setTasksFile(m_ui->tasksFile->text());
+    SettingsManager::instance()->setDateAlarmDays(m_ui->daysLeft->value());
 
     QVector<QString> priorities;
     for (int row = 0; row < m_ui->priorityList->count(); ++row)

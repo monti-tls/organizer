@@ -37,6 +37,10 @@ void TaskDelegate::paint(QPainter* painter, QStyleOptionViewItem const& option, 
     {
         QDate date = index.data().toDate();
         QString text = date.toString(SettingsManager::instance()->getDateFormat());
+
+        int distance = QDate::currentDate().daysTo(date);
+        if (date.isValid() && distance <= SettingsManager::instance()->getDateAlarmDays())
+            text = QString::number(distance) + " days left";
         QApplication::style()->drawItemText(painter, option.rect, Qt::AlignCenter, new_option.palette, true, text);
     }
     // Progress

@@ -16,8 +16,8 @@ SettingsManager::SettingsManager()
     m_defaultPriorityColors["8"] = QColor(Qt::magenta).darker();
 
     m_defaultDateFormat = "dd MMM yy";
-
     m_defaultTasksFile = QDir::home().absoluteFilePath("tasks.todo");
+    m_defaultDateAlarmDays = 3;
 }
 
 SettingsManager::~SettingsManager()
@@ -67,6 +67,11 @@ QString SettingsManager::getTasksFile() const
     return m_settings->value("tasksFile", m_defaultTasksFile).toString();
 }
 
+int SettingsManager::getDateAlarmDays() const
+{
+    return m_settings->value("dateAlarmDays", m_defaultDateAlarmDays).toInt();
+}
+
 void SettingsManager::setAllowablePriorities(QVector<QString> const& priorities)
 {
     QList<QVariant> list;
@@ -90,4 +95,9 @@ void SettingsManager::setDateFormat(QString const& format)
 void SettingsManager::setTasksFile(QString const& file)
 {
     m_settings->setValue("tasksFile", file);
+}
+
+void SettingsManager::setDateAlarmDays(int days)
+{
+    m_settings->setValue("dateAlarmDays", days);
 }
