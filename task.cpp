@@ -44,6 +44,11 @@ QVector<Task*> const& Task::getChildren() const
     return m_children;
 }
 
+QVector<Task*>& Task::getChildren()
+{
+    return m_children;
+}
+
 Task* Task::getSuper() const
 {
     return m_super;

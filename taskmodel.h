@@ -28,6 +28,7 @@ public:
     QStringList mimeTypes() const;
     QMimeData* mimeData(QModelIndexList const& indexList) const;
     bool dropMimeData(QMimeData const* data, Qt::DropAction, int row, int, QModelIndex const& parent);
+    void sort(int column, Qt::SortOrder order);
 
     Task* root() const;
 

@@ -19,6 +19,7 @@ public slots:
     QString const& getDescription() const;
     QDate const& getTerm() const;
     QVector<Task*> const& getChildren() const;
+    QVector<Task*>& getChildren();
     Task* getSuper() const;
     float getProgress() const;
     int getChildIndex(Task* child) const;

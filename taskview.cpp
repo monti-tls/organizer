@@ -15,6 +15,8 @@ TaskView::TaskView(QWidget* parent) :
     setDragEnabled(true);
     setDragDropMode(QTreeView::InternalMove);
     setDragDropOverwriteMode(false);
+    setSortingEnabled(true);
+    setUniformRowHeights(true);
 }
 
 void TaskView::M_onContextMenuRequested(QPoint const& at)

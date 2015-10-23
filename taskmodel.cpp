@@ -1,8 +1,10 @@
 #include "taskmodel.h"
+#include "settingsmanager.h"
 #include <QStringList>
 #include <QColor>
 #include <QMimeData>
 #include <QDataStream>
+#include <QtAlgorithms>
 
 TaskModel::TaskModel(Task* root, QObject* parent) :
     QAbstractItemModel(parent),
@@ -186,9 +188,13 @@ bool TaskModel::removeRows(int row, int count, QModelIndex const& parent)
     if (row + count > root->getChildren().size())
         return false;
 
-    beginRemoveRows(parent, row, row + count - 1);
+    QVector<Task*> childrenToRemove;
     for (int id = 0; id < count; ++id)
-        root->removeChild(root->getChildren().at(row + id));
+        childrenToRemove << root->getChildren().at(row + id);
+
+    beginRemoveRows(parent, row, row + count - 1);
+    foreach (Task* child, childrenToRemove)
+        root->removeChild(child);
     endRemoveRows();
 
     emit layoutChanged();
@@ -289,6 +295,34 @@ bool TaskModel::dropMimeData(QMimeData const* data, Qt::DropAction, int row, int
     emit layoutChanged();
 
     return true;
+}
+
+struct less
+{
+    less(bool n) : n(n) {}
+
+    bool operator()(Task* a, Task* b)
+    {
+        int oa = SettingsManager::instance()->getAllowablePriorities().indexOf(a->getPriority());
+        int ob = SettingsManager::instance()->getAllowablePriorities().indexOf(b->getPriority());
+
+        return n ^ (oa < ob);
+    }
+
+    bool n;
+};
+
+void TaskModel::sort(int column, Qt::SortOrder order)
+{
+    // Only allow priority sort
+    if (column != 1)
+        return;
+
+    emit layoutAboutToBeChanged();
+
+    qSort(m_root->getChildren().begin(), m_root->getChildren().end(), less(order == Qt::AscendingOrder));
+
+    emit layoutChanged();
 }
 
 Task* TaskModel::root() const
