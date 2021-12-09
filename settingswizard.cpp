@@ -37,7 +37,7 @@ void SettingsWizard::readSettings()
         QColor color = SettingsManager::instance()->getColorForPriority(name);
 
         QListWidgetItem* item = new QListWidgetItem(name);
-        item->setBackgroundColor(color);
+        item->setBackground(color);
         m_ui->priorityList->addItem(item);
     }
 }
@@ -53,7 +53,7 @@ void SettingsWizard::writeSettings() const
     {
         QListWidgetItem* item = m_ui->priorityList->item(row);
         priorities.push_back(item->text());
-        SettingsManager::instance()->setColorForPriority(item->text(), item->backgroundColor());
+        SettingsManager::instance()->setColorForPriority(item->text(), item->background().color());
     }
     SettingsManager::instance()->setAllowablePriorities(priorities);
 }
@@ -72,7 +72,7 @@ void SettingsWizard::M_addPriority()
         else
         {
             QListWidgetItem* item = new QListWidgetItem(name);
-            item->setBackgroundColor(wizard->getColor());
+            item->setBackground(wizard->getColor());
             m_ui->priorityList->addItem(item);
         }
     }
@@ -88,7 +88,7 @@ void SettingsWizard::M_editPriority()
 
     PriorityWizard* wizard = new PriorityWizard();
     wizard->setName(item->text());
-    wizard->setColor(item->backgroundColor());
+    wizard->setColor(item->background().color());
 
     if (wizard->exec() == QDialog::Accepted)
     {
@@ -101,7 +101,7 @@ void SettingsWizard::M_editPriority()
         else
         {
             item->setText(wizard->getName());
-            item->setBackgroundColor(wizard->getColor());
+            item->setBackground(wizard->getColor());
             m_ui->priorityList->addItem(item);
         }
     }

@@ -10,12 +10,16 @@ TaskModel::TaskModel(Task* root, QObject* parent) :
     QAbstractItemModel(parent),
     m_root(root)
 {
-    setSupportedDragActions(Qt::MoveAction);
 }
 
 TaskModel::~TaskModel()
 {
     delete m_root;
+}
+
+Qt::DropActions TaskModel::supportedDragActions() const
+{
+    return Qt::MoveAction;
 }
 
 QVariant TaskModel::data(QModelIndex const& index, int role) const
@@ -320,7 +324,7 @@ void TaskModel::sort(int column, Qt::SortOrder order)
 
     emit layoutAboutToBeChanged();
 
-    qSort(m_root->getChildren().begin(), m_root->getChildren().end(), less(order == Qt::AscendingOrder));
+    std::sort(m_root->getChildren().begin(), m_root->getChildren().end(), less(order == Qt::AscendingOrder));
 
     emit layoutChanged();
 }

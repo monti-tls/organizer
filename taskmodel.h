@@ -13,6 +13,7 @@ public:
     explicit TaskModel(Task* root, QObject* parent = 0);
     ~TaskModel();
 
+    Qt::DropActions supportedDragActions() const;
     QVariant data(QModelIndex const& index, int role) const;
     bool setData(QModelIndex const& index, QVariant const& value, int role);
     Qt::ItemFlags flags(QModelIndex const& index) const;
